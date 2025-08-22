@@ -1,0 +1,90 @@
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <!-- Logo Section -->
+  <div class="sidebar-logo">
+    <div class="logo-container">
+      <img src="/assets/images/logo.png" alt="Icon" class="logo-icon">
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li 
+        *ngFor="let item of menuItems" 
+        class="nav-item"
+        [class.has-children]="item.children && item.children.length > 0"
+        [class.expanded]="isMenuExpanded(item.id)"
+        [class.active]="isActive(item.route || '')">
+        
+        <!-- Main Menu Item -->
+        <div 
+          class="nav-link"
+          [class.active]="item.route && isActive(item.route)"
+          (click)="item.route ? navigate(item.route) : toggleMenu(item.id)"
+          [title]="collapsed ? item.label : ''">
+          
+          <i class="nav-icon" [class]="item.icon"></i>
+          
+          <span *ngIf="!collapsed" class="nav-label">{{ item.label }}</span>
+          
+          <span 
+            *ngIf="!collapsed && item.badge" 
+            class="nav-badge"
+            [class]="'badge-' + item.badge.color">
+            {{ item.badge.text }}
+          </span>
+          
+          <i 
+            *ngIf="!collapsed && item.children && item.children.length > 0" 
+            class="expand-icon"
+            [class]="isMenuExpanded(item.id) ? 'chevron-down' : 'chevron-right'">
+          </i>
+        </div>
+
+        <!-- Submenu -->
+        <ul 
+          *ngIf="item.children && item.children.length > 0" 
+          class="nav-submenu"
+          [class.show]="!collapsed && isMenuExpanded(item.id)">
+          
+          <li 
+            *ngFor="let child of item.children" 
+            class="nav-subitem"
+            [class.active]="isActive(child.route || '')">
+            
+            <div 
+              class="nav-sublink"
+              [class.active]="child.route && isActive(child.route)"
+              (click)="navigate(child.route || '')"
+              [title]="child.label">
+              
+              <i class="nav-subicon" [class]="child.icon"></i>
+              <span class="nav-sublabel">{{ child.label }}</span>
+              
+              <span 
+                *ngIf="child.badge" 
+                class="nav-badge"
+                [class]="'badge-' + child.badge.color">
+                {{ child.badge.text }}
+              </span>
+            </div>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer" *ngIf="!collapsed">
+    <div class="system-info">
+      <div class="info-item">
+        <span class="info-label">Версия:</span>
+        <span class="info-value">1.0.0</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">LLM статус:</span>
+        <span class="info-value status-online">Активен</span>
+      </div>
+    </div>
+  </div>
+</aside>

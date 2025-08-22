@@ -1,0 +1,143 @@
+<div class="plan-list-container">
+  <div class="header">
+    <h1>Планы производства</h1>
+    <div class="actions">
+      <button class="btn btn-primary" (click)="onUpload()">
+        📤 Загрузить план
+      </button>
+      <div class="dropdown">
+        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown">
+          📥 Скачать
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" (click)="onDownloadExcel()" href="#">
+            📊 Excel (.xlsx)
+          </a>
+          <a class="dropdown-item" (click)="onDownloadCsv()" href="#">
+            📄 CSV
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Фильтры -->
+  <div class="filters-section">
+    <div class="row">
+      <div class="col-md-3">
+        <label for="start_date">Дата начала:</label>
+        <input 
+          type="date" 
+          id="start_date" 
+          class="form-control" 
+          [(ngModel)]="filters.start_date"
+          (change)="onFilterChange()"
+        >
+      </div>
+      <div class="col-md-3">
+        <label for="end_date">Дата окончания:</label>
+        <input 
+          type="date" 
+          id="end_date" 
+          class="form-control" 
+          [(ngModel)]="filters.end_date"
+          (change)="onFilterChange()"
+        >
+      </div>
+      <div class="col-md-3">
+        <label for="line_id">Линия:</label>
+        <select 
+          id="line_id" 
+          class="form-control" 
+          [(ngModel)]="filters.line_id"
+          (change)="onFilterChange()"
+        >
+          <option [ngValue]="undefined">Все линии</option>
+          <!-- Production lines will be loaded dynamically -->
+        </select>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-secondary" (click)="clearFilters()">
+          ❌ Очистить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Загрузка -->
+  <div *ngIf="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="sr-only">Загрузка...</span>
+    </div>
+    <p>Загружаем планы производства...</p>
+  </div>
+
+  <!-- Таблица планов -->
+  <div *ngIf="!loading && plans.length > 0" class="plans-table">
+    <table class="table table-striped table-hover">
+      <thead class="thead-dark">
+        <tr>
+          <th>ID</th>
+          <th>Линия</th>
+          <th>Продукт</th>
+          <th>Задача</th>
+          <th>Период</th>
+          <th>Длительность</th>
+          <th>Источник</th>
+          <th>Создано</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let plan of plans">
+          <td>{{ plan.id }}</td>
+          <td>{{ plan.line?.name || '—' }}</td>
+          <td>
+            <strong>{{ plan.product?.name || '—' }}</strong>
+            <small class="d-block text-muted" *ngIf="plan.product?.code">
+              {{ plan.product?.code ?? '—' }}
+            </small>
+          </td>
+          <td>{{ plan.title }}</td>
+          <td>
+            <span class="badge badge-info">
+              {{ plan.start_dt }} — {{ plan.end_dt }}
+            </span>
+          </td>
+          <td>
+            <span class="badge badge-secondary">
+              {{ getDurationDays(plan.start_dt, plan.end_dt) }} дн.
+            </span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="{
+              'badge-primary': plan.source === 'excel',
+              'badge-success': plan.source === 'api',
+              'badge-warning': plan.source === 'manual'
+            }">
+              {{ plan.source }}
+            </span>
+          </td>
+          <td>
+            <small class="text-muted">
+              {{ plan.created_at | date:'short' }}
+            </small>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Пустое состояние -->
+  <div *ngIf="!loading && plans.length === 0" class="empty-state text-center py-5">
+    <div class="mb-3">
+      <i class="fas fa-calendar-alt fa-3x text-muted"></i>
+    </div>
+    <h3>Нет планов производства</h3>
+    <p class="text-muted">
+      Планы производства отсутствуют или не соответствуют заданным фильтрам.
+    </p>
+    <button class="btn btn-primary" (click)="onUpload()">
+      📤 Загрузить первый план
+    </button>
+  </div>
+</div>

@@ -1,0 +1,165 @@
+$primary-color: #1890ff;
+$success-color: #52c41a;
+$warning-color: #faad14;
+$danger-color: #ff4d4f;
+$text-color: #262626;
+$text-secondary: #8c8c8c;
+
+.activities-container {
+  padding: 16px 24px;
+  max-height: 400px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f0f0f0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d9d9d9;
+    border-radius: 2px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: $text-secondary;
+
+    .icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .activity-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      .icon {
+        font-size: 14px;
+        color: white;
+      }
+
+      &.icon-primary {
+        background: $primary-color;
+      }
+
+      &.icon-success {
+        background: $success-color;
+      }
+
+      &.icon-warning {
+        background: $warning-color;
+      }
+
+      &.icon-danger {
+        background: $danger-color;
+      }
+    }
+
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+
+      .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+
+        .activity-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: $text-color;
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .activity-time {
+          font-size: 12px;
+          color: $text-secondary;
+          flex-shrink: 0;
+          margin-left: 8px;
+        }
+      }
+
+      .activity-description {
+        font-size: 13px;
+        color: $text-secondary;
+        margin: 0 0 6px 0;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .activity-status {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &.status-task {
+          background: rgba($primary-color, 0.1);
+          color: $primary-color;
+        }
+
+        &.status-active,
+        &.status-completed {
+          background: rgba($success-color, 0.1);
+          color: $success-color;
+        }
+
+        &.status-pending,
+        &.status-processing {
+          background: rgba($warning-color, 0.1);
+          color: $warning-color;
+        }
+
+        &.status-failed,
+        &.status-critical,
+        &.status-high {
+          background: rgba($danger-color, 0.1);
+          color: $danger-color;
+        }
+      }
+    }
+  }
+}
+
+// Icons
+.icon {
+  &.clock::before { content: '=P'; }
+  &.calendar::before { content: '=Å'; }
+  &.warning::before { content: ' '; }
+  &.alert::before { content: '=¨'; }
+}

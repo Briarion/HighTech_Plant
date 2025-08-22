@@ -1,0 +1,431 @@
+@use "sass:color";
+
+// Colors based on requirements
+$task-jan-apr: #52c41a; // Green
+$task-may-jul: #1890ff; // Blue
+$task-aug-dec: #faad14; // Orange
+$downtime-color: #ff4d4f; // Red
+$conflict-color: #722ed1; // Purple
+
+$primary-color: #1890ff;
+$text-color: #262626;
+$text-secondary: #8c8c8c;
+$border-color: #f0f0f0;
+$border-light: #f5f5f5;
+
+// Базовая ширина колонки месяца в сетке
+$month-col-min-width: 60px;
+// Ширина колонки с названием линии
+$line-col-width: 180px;
+
+.month-timeline-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+
+  .timeline-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: $text-color;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      &:before {
+        content: '📊';
+        font-size: 24px;
+      }
+    }
+
+    .timeline-info {
+      font-size: 14px;
+      color: $text-secondary;
+      padding: 4px 12px;
+      background: rgba($primary-color, 0.1);
+      border-radius: 12px;
+    }
+  }
+
+  // Month grid timeline
+  .timeline-grid {
+    // Кол-во месяцев передаем из шаблона через CSS-переменную --months
+    // Делаем минимальную ширину на основе количества месяцев
+    overflow-x: auto;
+    border-bottom: 1px solid $border-color;
+    // 180px колонка линии + N * 60px колонок месяцев
+    min-width: calc(#{$line-col-width} + var(--months, 12) * #{$month-col-min-width});
+
+    .timeline-months-header {
+      display: grid;
+      grid-template-columns: #{$line-col-width} repeat(var(--months, 12), 1fr);
+      background: $border-light;
+      border-bottom: 2px solid $border-color;
+
+      .line-header-cell {
+        padding: 12px 16px;
+        font-weight: 600;
+        color: $text-color;
+        background: #fafafa;
+        border-right: 1px solid $border-color;
+        display: flex;
+        align-items: center;
+      }
+
+      .header-month {
+        position: relative;
+        padding: 12px 8px;
+        text-align: center;
+        font-weight: 600;
+        color: $text-color;
+        border-right: 1px solid $border-color;
+        font-size: 13px;
+        min-width: $month-col-min-width;
+
+        &:last-child {
+          border-right: none;
+        }
+
+        // Бейдж года над "Янв"
+        .year-badge {
+          position: absolute;
+          top: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 10px;
+          color: $text-secondary;
+          background: #fff;
+          padding: 0 4px;
+          border-radius: 8px;
+          border: 1px solid $border-color;
+          line-height: 14px;
+        }
+      }
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: #{$line-col-width} repeat(var(--months, 12), 1fr);
+      border-bottom: 1px solid $border-light;
+
+      &:hover {
+        background: rgba($primary-color, 0.02);
+      }
+
+      .line-name-cell {
+        padding: 16px;
+        font-weight: 500;
+        color: $text-color;
+        background: #fafafa;
+        border-right: 1px solid $border-color;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        max-width: $line-col-width;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .month-cell {
+        position: relative;
+        border-right: 1px solid $border-light;
+        min-height: 60px;
+        min-width: $month-col-min-width;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: stretch;
+
+        &:last-child {
+          border-right: none;
+        }
+
+        .task-bar {
+          position: relative; // для z-index
+          z-index: 2; // задачи над штриховкой простоя
+          height: 24px;
+          margin: 2px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          padding: 0 6px;
+          font-size: 11px;
+          font-weight: 600;
+          color: white;
+          transition: all 0.2s ease;
+          cursor: pointer;
+
+          &.task-active {
+            opacity: 1;
+          }
+
+          &:not(.task-active) {
+            opacity: 0;
+            height: 0;
+            margin: 0;
+            padding: 0;
+          }
+
+          &.task-conflict {
+            border: 2px solid $conflict-color;
+            box-shadow: 0 0 0 1px rgba($conflict-color, 0.3);
+          }
+
+          &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          }
+
+          .task-label {
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          }
+        }
+
+        .downtime-overlay {
+          position: absolute;
+          z-index: 1; // ниже задач
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: repeating-linear-gradient(45deg,
+              rgba($downtime-color, 0.8) 0px,
+              rgba($downtime-color, 0.8) 4px,
+              transparent 4px,
+              transparent 8px);
+          pointer-events: none;
+          border: 1px solid $downtime-color;
+
+          &.downtime-active {
+            opacity: 1;
+          }
+
+          &:not(.downtime-active) {
+            opacity: 0;
+          }
+        }
+      }
+    }
+  }
+
+  // Legend
+  .timeline-legend {
+    padding: 20px 24px;
+    background: #fafafa;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+
+    .legend-section {
+      h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: $text-color;
+        margin: 0 0 12px 0;
+      }
+
+      .legend-items {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: $text-secondary;
+
+        .legend-color {
+          width: 16px;
+          height: 16px;
+          border-radius: 3px;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+
+          &.task-jan-apr {
+            background: $task-jan-apr;
+          }
+
+          &.task-may-jul {
+            background: $task-may-jul;
+          }
+
+          &.task-aug-dec {
+            background: $task-aug-dec;
+          }
+
+          &.downtime-pattern {
+            background: repeating-linear-gradient(45deg,
+                rgba($downtime-color, 0.8) 0px,
+                rgba($downtime-color, 0.8) 2px,
+                transparent 2px,
+                transparent 4px);
+            border: 1px solid $downtime-color;
+          }
+
+          &.conflict-pattern {
+            background: $task-jan-apr;
+            border: 2px solid $conflict-color;
+            width: 14px;
+            height: 14px;
+          }
+        }
+      }
+    }
+  }
+
+  // Empty state
+  .timeline-empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: $text-secondary;
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    h3 {
+      font-size: 18px;
+      color: $text-color;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      font-size: 14px;
+      margin: 0 0 24px 0;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      background: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+
+      &:hover {
+        background: color.adjust($primary-color, $lightness: -10%);
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 1024px) {
+  .month-timeline-container {
+    .timeline-grid {
+
+      // Уменьшаем ширину колонки линии
+      .timeline-months-header,
+      .timeline-row {
+        grid-template-columns: 140px repeat(var(--months, 12), 1fr);
+      }
+
+      .line-name-cell {
+        max-width: 140px;
+        padding: 12px;
+        font-size: 12px;
+      }
+    }
+
+    .timeline-legend {
+      flex-direction: column;
+      gap: 24px;
+
+      .legend-section {
+        .legend-items {
+          gap: 12px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .month-timeline-container {
+    .timeline-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+
+      h2 {
+        font-size: 18px;
+      }
+
+      .timeline-info {
+        align-self: stretch;
+        text-align: center;
+      }
+    }
+
+    .timeline-grid {
+
+      .timeline-months-header,
+      .timeline-row {
+        grid-template-columns: 100px repeat(var(--months, 12), 50px);
+      }
+
+      .line-name-cell {
+        max-width: 100px;
+        padding: 8px;
+        font-size: 11px;
+      }
+
+      .month-cell {
+        min-width: 50px;
+        min-height: 50px;
+
+        .task-bar {
+          height: 20px;
+          font-size: 10px;
+          padding: 0 4px;
+        }
+      }
+    }
+
+    .timeline-legend {
+      padding: 16px;
+
+      .legend-section {
+        h4 {
+          font-size: 13px;
+        }
+
+        .legend-items {
+          .legend-item {
+            font-size: 11px;
+
+            .legend-color {
+              width: 14px;
+              height: 14px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,114 @@
+<header class="header">
+  <div class="header-left">
+    <!-- Menu Toggle Button -->
+    <button 
+      class="btn btn-ghost menu-toggle"
+      (click)="onToggleSidebar()"
+      title="Переключить меню">
+      <i class="icon" [class]="sidebarCollapsed ? 'menu' : 'menu-fold'"></i>
+    </button>
+
+    <!-- Logo and Title -->
+    <div class="brand">
+      <img src="/assets/images/logo.png" alt="Logo" class="logo" *ngIf="!sidebarCollapsed">
+      <h1 class="title">Планировщик производства</h1>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <!-- Health Status -->
+    <div class="health-status">
+      <div class="status-indicator" title="Состояние системы">
+        <i class="icon check-circle status-online"></i>
+        <span class="status-text">Система работает</span>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notifications-container">
+      <button 
+        class="btn btn-ghost notifications-toggle"
+        [class.has-notifications]="unreadCount > 0"
+        (click)="toggleNotifications()"
+        title="Уведомления">
+        <i class="icon bell"></i>
+        <span *ngIf="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+      </button>
+
+      <!-- Notifications Dropdown -->
+      <div class="notifications-dropdown" [class.show]="showNotifications">
+        <div class="dropdown-header">
+          <h3>Уведомления</h3>
+          <div class="header-actions">
+            <button 
+              class="btn btn-link btn-sm" 
+              (click)="markAllAsRead()" 
+              *ngIf="unreadCount > 0"
+              title="Отметить все как прочитанные">
+              <i class="icon eye"></i>
+            </button>
+            <button 
+              class="btn btn-link btn-sm" 
+              (click)="clearAllNotifications()"
+              *ngIf="notifications.length > 0"
+              title="Очистить все">
+              <i class="icon trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="notifications-list">
+          <div 
+            *ngFor="let notification of notifications.slice(0, 10)" 
+            class="notification-item"
+            [class.unread]="!notification.read">
+            <div class="notification-content">
+              <div class="notification-header">
+                <i 
+                  class="icon notification-icon"
+                  [class]="getNotificationIcon(notification.type)"
+                  [style.color]="getNotificationColor(notification.type)">
+                </i>
+                <span class="notification-title">{{ notification.title }}</span>
+                <span class="notification-time">{{ formatTime(notification.timestamp) }}</span>
+                <button 
+                  class="btn btn-link btn-xs"
+                  (click)="removeNotification(notification.id)"
+                  title="Удалить">
+                  <i class="icon close"></i>
+                </button>
+              </div>
+              <p class="notification-message">{{ notification.message }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="notifications.length === 0" class="empty-notifications">
+            <i class="icon bell-slash"></i>
+            <p>Нет уведомлений</p>
+          </div>
+
+          <div *ngIf="notifications.length > 10" class="more-notifications">
+            <span>И ещё {{ notifications.length - 10 }} уведомлений...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Menu -->
+    <div class="user-menu">
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="icon user"></i>
+        </div>
+        <span class="user-name">Администратор</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Click outside to close notifications -->
+  <div 
+    *ngIf="showNotifications" 
+    class="notifications-backdrop"
+    (click)="showNotifications = false">
+  </div>
+</header>

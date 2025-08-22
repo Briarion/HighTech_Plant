@@ -1,0 +1,109 @@
+$primary-color: #1890ff;
+$success-color: #52c41a;
+$warning-color: #faad14;
+$danger-color: #ff4d4f;
+$info-color: #1890ff;
+
+.stats-card {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .icon {
+      font-size: 24px;
+      color: white;
+    }
+  }
+
+  .card-content {
+    flex: 1;
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .card-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #8c8c8c;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .trend {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+
+        &.trend-up {
+          color: $success-color;
+        }
+
+        &.trend-down {
+          color: $danger-color;
+        }
+      }
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #262626;
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: #8c8c8c;
+    }
+  }
+
+  &.card-primary .card-icon {
+    background: linear-gradient(135deg, $primary-color, #40a9ff);
+  }
+
+  &.card-success .card-icon {
+    background: linear-gradient(135deg, $success-color, #73d13d);
+  }
+
+  &.card-warning .card-icon {
+    background: linear-gradient(135deg, $warning-color, #ffc53d);
+  }
+
+  &.card-danger .card-icon {
+    background: linear-gradient(135deg, $danger-color, #ff7875);
+  }
+
+  &.card-info .card-icon {
+    background: linear-gradient(135deg, $info-color, #69c0ff);
+  }
+}
+
+.icon {
+  &.trend-up::before { content: '↗'; }
+  &.trend-down::before { content: '↘'; }
+}

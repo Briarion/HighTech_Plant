@@ -1,0 +1,40 @@
+<div class="content-card upload-card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <i class="icon upload"></i>
+      Загрузка плана производства
+    </h2>
+    <button class="btn btn-secondary" (click)="onHide()">✖ Скрыть</button>
+  </div>
+
+  <div class="card-body">
+    <div class="file-input">
+      <input type="file" id="planFile" (change)="onFileSelected($event)" accept=".xlsx,.xls" [disabled]="isUploading" />
+    </div>
+
+    <button class="btn btn-primary" (click)="onUpload()" [disabled]="!selectedFile || isUploading">
+      <i class="icon upload"></i>
+      <span>{{ isUploading ? 'Загрузка...' : 'Загрузить' }}</span>
+    </button>
+
+    <div *ngIf="result" class="result">
+      <h3>Результат загрузки</h3>
+      <p>Создано: {{ result.created }}</p>
+      <p>Обновлено: {{ result.updated }}</p>
+      <p>Время обработки: {{ result.processing_time_ms }} мс</p>
+      <p>Хэш файла: {{ result.file_hash }}</p>
+
+      <div *ngIf="result.warnings?.length">
+        <h4>Предупреждения:</h4>
+        <ul>
+          <li *ngFor="let warn of result.warnings">{{ warn }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div *ngIf="error" class="error">
+      <h3>Ошибка</h3>
+      <p><b>{{ error.code }}</b>: {{ error.message }}</p>
+    </div>
+  </div>
+</div>

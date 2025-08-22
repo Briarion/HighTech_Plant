@@ -1,0 +1,110 @@
+<div class="month-timeline-container">
+  <div class="timeline-header">
+    <h2>Временная шкала планов производства</h2>
+
+    <!-- Панель выбора дат -->
+    <div class="filters" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <label style="font-size:12px; color:#8c8c8c;">Период:</label>
+
+      <input type="date" [(ngModel)]="dateStartModel" />
+      <span>—</span>
+      <input type="date" [(ngModel)]="dateEndModel" />
+
+      <button class="btn" (click)="applyDateFilter()">Применить</button>
+      <button class="btn" (click)="clearDateFilter()" style="background:#f0f0f0; color:#262626;">Сброс</button>
+
+      <div style="width:1px; height:20px; background:#f0f0f0; margin:0 4px;"></div>
+
+      <button class="btn" (click)="presetThisYear()" style="background:#e6f4ff; color:#1890ff;">Текущий год</button>
+      <button class="btn" (click)="presetLast6Months()" style="background:#fffbe6; color:#faad14;">Последние 6
+        мес.</button>
+
+      <div class="timeline-info" style="margin-left:8px;">
+        {{ timelineTasks.length }} задач, {{ timelineDowntimes.length }} простоев
+      </div>
+    </div>
+  </div>
+
+  <!-- Показываем сетку ТОЛЬКО если в выбранном диапазоне есть задачи -->
+  <div *ngIf="hasPlanData; else noPlan" class="timeline-grid" [style.--months]="timelineMonths.length">
+    <!-- Шапка с месяцами -->
+    <div class="timeline-months-header" [style.--months]="timelineMonths.length">
+      <div class="line-header-cell">Линия / Продукт</div>
+      <div *ngFor="let month of timelineMonths" class="month-cell header-month" [title]="month.name + ' ' + month.year">
+        {{ month.shortName }}
+        <span class="year-badge" *ngIf="month.month === 1">{{ month.year }}</span>
+      </div>
+    </div>
+
+    <!-- Строки: каждый продукт своей линии — отдельная строка -->
+    <div *ngFor="let row of productRows" class="timeline-row" [style.--months]="timelineMonths.length">
+      <div class="line-name-cell" [title]="row.line + ' — ' + row.product">
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <span style="font-weight:600;">{{ row.line }}</span>
+          <span style="font-size:12px; color:#8c8c8c;">{{ row.product }}</span>
+        </div>
+      </div>
+
+      <!-- Ячейки месяцев -->
+      <div *ngFor="let month of timelineMonths" class="month-cell" [attr.data-month]="month.month"
+        [attr.data-year]="month.year">
+        <!-- Задачи для этой строки (line+product) -->
+        <div *ngFor="let task of getTasksForRow(row)" class="task-bar" [ngClass]="getTaskClassForMonth(task, month)"
+          [ngStyle]="getTaskStyleForMonth(task, month)" [title]="'Задача: ' + task.title + ' (' + task.product + ')'">
+          <span *ngIf="task.startMonth === month.month && task.startYear === month.year" class="task-label">
+            {{ task.id }}
+          </span>
+        </div>
+
+        <!-- Простои линии (общие для всех продуктов строки) -->
+        <div *ngFor="let downtime of getDowntimesForLine(row.line)" class="downtime-overlay"
+          [ngClass]="getDowntimeClassForMonth(downtime, month)"
+          [title]="'Простой: ' + downtime.kind + ' (' + downtime.status + ')'"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Пустое состояние -->
+  <ng-template #noPlan>
+    <div class="timeline-empty">
+      <div class="empty-icon">📊</div>
+      <h3>Нет плана в выбранном периоде</h3>
+      <p>Измените период или загрузите план, чтобы увидеть временную шкалу по продуктам линии.</p>
+    </div>
+  </ng-template>
+
+  <!-- Легенда -->
+  <div class="timeline-legend">
+    <div class="legend-section">
+      <h4>Задачи по периодам:</h4>
+      <div class="legend-items">
+        <div class="legend-item">
+          <div class="legend-color task-jan-apr"></div>
+          <span>Январь - Апрель</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color task-may-jul"></div>
+          <span>Май - Июль</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color task-aug-dec"></div>
+          <span>Август - Декабрь</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend-section">
+      <h4>Простои:</h4>
+      <div class="legend-items">
+        <div class="legend-item">
+          <div class="legend-color downtime-pattern"></div>
+          <span>Простой оборудования</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color conflict-pattern"></div>
+          <span>Конфликт задачи и простоя</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

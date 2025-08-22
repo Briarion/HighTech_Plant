@@ -1,0 +1,238 @@
+<div class="dashboard-container">
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="page-title">Главная панель</h1>
+      <p class="page-subtitle">Обзор системы планирования производства</p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        class="btn btn-danger"
+        (click)="onResetDb()"
+        [disabled]="loading"
+        title="Очистить все данные в базе (dev)">
+        <i class="icon trash"></i>
+        <span>Сбросить БД</span>
+      </button>
+      
+      <button 
+        class="btn btn-primary"
+        (click)="onRefresh()"
+        [disabled]="loading">
+        <i class="icon refresh" [class.spinning]="loading"></i>
+        <span>Обновить</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <app-loading-spinner size="large" message="Загрузка данных дашборда..."></app-loading-spinner>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading" class="dashboard-content">
+    <!-- Stats Cards Row -->
+    <div class="stats-grid">
+      <app-stats-card
+        title="Всего задач"
+        [value]="stats.totalTasks"
+        icon="calendar"
+        color="primary"
+        [subtitle]="'За последние 30 дней'">
+      </app-stats-card>
+
+      <app-stats-card
+        title="Простои оборудования"
+        [value]="stats.totalDowntimes"
+        icon="warning"
+        color="warning"
+        [subtitle]="'Обнаружено простоев'">
+      </app-stats-card>
+
+      <app-stats-card
+        title="Конфликты"
+        [value]="stats.totalConflicts"
+        icon="alert"
+        color="danger"
+        [subtitle]="'Требуют внимания'">
+      </app-stats-card>
+
+      <app-system-status
+        [status]="stats.systemHealth"
+        title="Состояние системы">
+      </app-system-status>
+    </div>
+
+    <!-- Plan Timeline Row -->
+    <app-plan-timeline
+      [planTasks]="allPlanTasks"
+      [downtimes]="allDowntimes"
+      [selectedDateRange]="selectedRange"
+      (loadRequested)="reloadPlan($event)">
+    </app-plan-timeline>
+
+    <!-- Upload Plan Row -->
+    <div *ngIf="!hasPlan || showUpload" class="upload-section">
+      <app-plan-upload
+        (uploadFinished)="onUploadFinished()"
+        (closed)="showUpload = false">
+      </app-plan-upload>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="content-grid">
+      <!-- Recent Activities -->
+      <div class="content-card activities-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="icon clock"></i>
+            Последняя активность
+          </h2>
+          <a routerLink="/plan" class="card-link">
+            Показать все
+            <i class="icon arrow-right"></i>
+          </a>
+        </div>
+        
+        <app-recent-activities
+          [tasks]="recentTasks"
+          [downtimes]="recentDowntimes"
+          [conflicts]="recentConflicts">
+        </app-recent-activities>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="content-card actions-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="icon zap"></i>
+            Быстрые действия
+          </h2>
+        </div>
+        
+        <div class="quick-actions">
+          <div class="action-item" (click)="onShowUpload()" role="button" tabindex="0">
+            <div class="action-icon upload">
+              <i class="icon upload"></i>
+            </div>
+            <div class="action-content">
+              <h3>Загрузить план</h3>
+              <p>Загрузить новый план производства из Excel</p>
+            </div>
+            <i class="icon chevron-right"></i>
+          </div>
+
+          <a routerLink="/downtimes/scan" class="action-item">
+            <div class="action-icon scan">
+              <i class="icon scan"></i>
+            </div>
+            <div class="action-content">
+              <h3>Сканировать протоколы</h3>
+              <p>Запустить сканирование протоколов собраний</p>
+            </div>
+            <i class="icon chevron-right"></i>
+          </a>
+
+          <a routerLink="/conflicts" class="action-item">
+            <div class="action-icon conflicts">
+              <i class="icon alert"></i>
+            </div>
+            <div class="action-content">
+              <h3>Просмотр конфликтов</h3>
+              <p>Проверить и разрешить обнаруженные конфликты</p>
+            </div>
+            <i class="icon chevron-right"></i>
+          </a>
+
+          <a routerLink="/reports" class="action-item">
+            <div class="action-icon reports">
+              <i class="icon chart"></i>
+            </div>
+            <div class="action-content">
+              <h3>Создать отчёт</h3>
+              <p>Сформировать отчёт по эффективности</p>
+            </div>
+            <i class="icon chevron-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Info Row -->
+    <div class="info-grid">
+      <!-- System Information -->
+      <div class="content-card info-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="icon info"></i>
+            Информация о системе
+          </h2>
+        </div>
+        
+        <div class="system-info">
+          <div class="info-row">
+            <span class="info-label">Версия системы:</span>
+            <span class="info-value">1.0.0</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Статус LLM:</span>
+            <span class="info-value status-online">Активен</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">База данных:</span>
+            <span class="info-value status-online">Подключена</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Последнее сканирование:</span>
+            <span class="info-value">Сегодня, 10:30</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage Statistics -->
+      <div class="content-card usage-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="icon trending-up"></i>
+            Статистика использования
+          </h2>
+        </div>
+        
+        <div class="usage-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ (stats.activeTasks / Math.max(stats.totalTasks, 1) * 100) | number:'1.0-0' }}%</div>
+            <div class="stat-label">Активных задач</div>
+            <div class="stat-bar">
+              <div 
+                class="stat-fill success"
+                [style.width.%]="(stats.activeTasks / Math.max(stats.totalTasks, 1) * 100)">
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-value">{{ recentDowntimes.length }}</div>
+            <div class="stat-label">Новых простоев сегодня</div>
+            <div class="stat-bar">
+              <div class="stat-fill warning" style="width: 65%"></div>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.totalConflicts }}</div>
+            <div class="stat-label">Требуют внимания</div>
+            <div class="stat-bar">
+              <div 
+                class="stat-fill danger"
+                [style.width.%]="Math.min(stats.totalConflicts * 10, 100)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

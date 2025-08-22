@@ -1,0 +1,228 @@
+<div class="conflicts-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Конфликты планирования</h1>
+      <p class="page-subtitle">Пересечения между плановыми задачами и простоями</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="onRefresh()" [disabled]="loading">
+        <i class="icon refresh" [class.spinning]="loading"></i>
+        <span>Обновить</span>
+      </button>
+
+      <div class="export-dropdown">
+        <button class="btn btn-outline">
+          <i class="icon download"></i>
+          <span>Экспорт</span>
+          <i class="icon chevron-down"></i>
+        </button>
+        <div class="dropdown-menu">
+          <button class="dropdown-item" (click)="onExportCsv()">
+            <i class="icon file"></i>
+            CSV файл
+          </button>
+          <button class="dropdown-item" (click)="onExportJson()">
+            <i class="icon code"></i>
+            JSON файл
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Фильтры -->
+  <div class="filters-section">
+    <div class="filters-card">
+      <div class="filters-content">
+        <div class="filter-group">
+          <label class="filter-label">Критичность:</label>
+          <select class="filter-select" [(ngModel)]="selectedSeverity" (change)="onFilterChange()">
+            <option value="all">Все</option>
+            <option value="critical">Критичная</option>
+            <option value="high">Высокая</option>
+            <option value="medium">Средняя</option>
+            <option value="low">Низкая</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Статус:</label>
+          <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+            <option value="all">Все</option>
+            <option value="new">Новые</option>
+            <option value="acknowledged">Принятые</option>
+            <option value="resolved">Разрешённые</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Тип:</label>
+          <select class="filter-select" [(ngModel)]="selectedType" (change)="onFilterChange()">
+            <option value="all">Все</option>
+            <option value="overlap">Пересечение</option>
+            <option value="resource">Ресурсы</option>
+            <option value="timing">Время</option>
+          </select>
+        </div>
+
+        <div class="results-count">
+          Найдено: <strong>{{ filteredConflicts.length }}</strong> из {{ conflicts.length }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <app-loading-spinner size="large" message="Загрузка конфликтов..."></app-loading-spinner>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-card">
+      <i class="icon warning"></i>
+      <h3>Ошибка загрузки</h3>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="onRefresh()">Попробовать снова</button>
+    </div>
+  </div>
+
+  <!-- Список -->
+  <div *ngIf="!loading && !error" class="conflicts-list">
+    <div *ngIf="filteredConflicts.length === 0" class="empty-state">
+      <i class="icon check-circle"></i>
+      <h3>{{ conflicts.length === 0 ? 'Конфликты не найдены' : 'Нет конфликтов по заданным фильтрам' }}</h3>
+      <p>{{ conflicts.length === 0 ? 'В настоящее время конфликтов не обнаружено' : 'Измените критерии фильтрации' }}
+      </p>
+    </div>
+
+    <div *ngIf="filteredConflicts.length > 0" class="conflicts-grid">
+      <div *ngFor="let c of filteredConflicts" class="conflict-card"
+        [class]="'conflict-' + c.severity + ' status-' + c.status" (click)="onConflictClick(c)">
+
+        <!-- Header -->
+        <div class="card-header">
+          <div class="conflict-info">
+            <div class="severity-badge" [class]="'severity-' + c.severity">
+              <i class="icon" [class]="getSeverityIcon(c.severity)"></i>
+              <span>{{ getSeverityLabel(c.severity) }}</span>
+            </div>
+            <div class="type-badge">{{ getTypeLabel(c.type) }}</div>
+          </div>
+
+          <div class="status-badge" [class]="'status-' + c.status">
+            <i class="icon" [class]="getStatusIcon(c.status)"></i>
+            {{ getStatusLabel(c.status) }}
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+          <h3 class="conflict-title">{{ c.description }}</h3>
+
+          <div class="conflict-details">
+            <!-- Downtime -->
+            <div class="detail-section downtime">
+              <div class="section-header">
+                <i class="icon warning"></i>
+                <span class="section-title">Простой</span>
+              </div>
+              <div class="section-content">
+                <div class="detail-row">
+                  <span class="detail-label">Тип:</span>
+                  <span class="detail-value">{{ c.downtime.kind }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Статус:</span>
+                  <span class="detail-value">{{ c.downtime.status || '—' }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Линия:</span>
+                  <span class="detail-value">{{ c.downtime.line_name }}</span>
+                </div>
+                <div class="detail-row" [title]="c.downtime.partial_date_start ? 'Год восстановлен эвристически' : ''">
+                  <span class="detail-label">Начало:</span>
+                  <span class="detail-value">
+                    <span class="partial-flag" *ngIf="c.downtime.partial_date_start">~</span>
+                    {{ formatDate(c.downtime.start_dt) }}
+                  </span>
+                </div>
+                <div class="detail-row" [title]="c.downtime.partial_date_end ? 'Год восстановлен эвристически' : ''">
+                  <span class="detail-label">Окончание:</span>
+                  <span class="detail-value">
+                    <span class="partial-flag" *ngIf="c.downtime.partial_date_end">~</span>
+                    {{ formatDate(c.downtime.end_dt) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plan task -->
+            <div class="detail-section task">
+              <div class="section-header">
+                <i class="icon play"></i>
+                <span class="section-title">Задача</span>
+              </div>
+              <div class="section-content">
+                <div class="detail-row">
+                  <span class="detail-label">Задача:</span>
+                  <span class="detail-value">{{ c.task.title }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Изделие:</span>
+                  <span class="detail-value">
+                    {{ c.task.product_name }}
+                    <span *ngIf="c.task.product_code && c.task.product_code !== '—'">({{ c.task.product_code }})</span>
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Линия:</span>
+                  <span class="detail-value">{{ c.task.line_name }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Период:</span>
+                  <span class="detail-value">
+                    {{ formatDate(c.task.start_dt) }} — {{ formatDate(c.task.end_dt) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Overlap -->
+            <div class="overlap-info" *ngIf="c.overlap_days > 0">
+              <i class="icon clock"></i>
+              <span>
+                Пересечение: {{ c.overlap_days }} {{ c.overlap_days % 10 === 1 && c.overlap_days % 100 !== 11 ? 'день' :
+                (c.overlap_days % 10 >= 2 && c.overlap_days % 10 <= 4 && (c.overlap_days % 100 < 10 || c.overlap_days %
+                  100>= 20) ? 'дня' : 'дней') }}
+                  ({{ formatDate(c.overlap_range.start) }} — {{ formatDate(c.overlap_range.end) }})
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer">
+          <div class="footer-info">
+            <span class="created-date">Обнаружено: {{ formatDateTime(c.created_at) }}</span>
+            <span *ngIf="c.resolved_at" class="resolved-date">Разрешено: {{ formatDateTime(c.resolved_at) }}</span>
+          </div>
+
+          <div class="footer-actions" *ngIf="c.status !== 'resolved'">
+            <button *ngIf="c.status === 'new'" class="action-btn acknowledge" (click)="acknowledgeConflict(c, $event)"
+              title="Принять к сведению">
+              <i class="icon eye"></i>
+            </button>
+            <button class="action-btn resolve" (click)="resolveConflict(c, $event)" title="Разрешить конфликт">
+              <i class="icon check"></i>
+            </button>
+          </div>
+
+          <i class="icon chevron-right details-arrow"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

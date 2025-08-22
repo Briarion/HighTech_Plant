@@ -1,0 +1,164 @@
+<div class="downtimes-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Простои оборудования</h1>
+      <p class="page-subtitle">Предварительный обзор для выявления потенциальных конфликтов</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="onRefresh()" [disabled]="loading">
+        <i class="icon refresh" [class.spinning]="loading"></i>
+        <span>Обновить</span>
+      </button>
+
+      <button class="btn btn-primary" (click)="onStartScan()">
+        <i class="icon scan"></i>
+        <span>Сканировать протоколы</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <app-loading-spinner size="large" message="Загрузка простоев..."></app-loading-spinner>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-card">
+      <i class="icon warning"></i>
+      <h3>Ошибка загрузки</h3>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="onRefresh()">Попробовать снова</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error" class="downtimes-list">
+    <div *ngIf="downtimes.length === 0" class="empty-state">
+      <i class="icon info"></i>
+      <h3>Простои не найдены</h3>
+      <p>Запустите сканирование протоколов для поиска простоев</p>
+      <button class="btn btn-primary" (click)="onStartScan()">
+        <i class="icon scan"></i>
+        Начать сканирование
+      </button>
+    </div>
+
+    <div *ngIf="downtimes.length > 0" class="downtimes-grid">
+      <div *ngFor="let d of downtimes" class="downtime-card" (click)="onDowntimeClick(d)">
+
+        <!-- Card header -->
+        <div class="card-header">
+          <div class="left">
+            <div class="title-row">
+              <h3 class="downtime-title">{{ d.kind || 'Простой' }}</h3>
+              <div class="chips">
+                <span class="chip chip-status" [ngClass]="getStatusClass(d.status)">
+                  <i class="icon flag"></i>{{ d.status || '—' }}
+                </span>
+                <span class="chip chip-kind">
+                  <i class="icon wrench"></i>{{ d.kind || '—' }}
+                </span>
+                <span class="chip chip-source" [ngClass]="getSourceClass(d.source)">
+                  <i class="icon" [ngClass]="getSourceIcon(d.source)"></i>{{ getSourceLabel(d.source) }}
+                </span>
+                <span class="chip chip-priority" [title]="'Приоритет статуса: ' + statusPriority(d.status)">
+                  <i class="icon lightning"></i>{{ statusPriority(d.status) }}
+                </span>
+              </div>
+            </div>
+
+            <p class="downtime-line">
+              <i class="icon line"></i>{{ d.line_name }}
+            </p>
+          </div>
+
+          <div class="right">
+            <div class="confidence-badge" [class]="'confidence-' + getConfidenceLevel(d.confidence)">
+              {{ confidencePct(d.confidence) }}%
+            </div>
+            <div class="confidence-meter" [attr.aria-label]="'Уверенность: ' + confidencePct(d.confidence) + '%'">
+              <div class="bar" [style.width.%]="confidencePct(d.confidence)"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card body -->
+        <div class="card-body">
+          <div class="cols">
+            <!-- Dates & duration -->
+            <div class="box box-dates">
+              <div class="time-row" [title]="d.partial_date_start ? 'Год восстановлен эвристически' : ''">
+                <span class="time-label">Начало:</span>
+                <span class="time-value">
+                  <span class="partial-flag" *ngIf="d.partial_date_start">~</span>
+                  {{ formatDate(d.start_dt, false) }}
+                </span>
+              </div>
+
+              <div class="time-row" [title]="d.partial_date_end ? 'Год восстановлен эвристически' : ''">
+                <span class="time-label">Окончание:</span>
+                <span class="time-value">
+                  <span class="partial-flag" *ngIf="d.partial_date_end">~</span>
+                  {{ formatDate(d.end_dt, false) }}
+                </span>
+              </div>
+
+              <div class="duration">
+                <i class="icon clock"></i>
+                <span>{{ d.duration_days }} {{ pluralizeDays(d.duration_days) }}</span>
+              </div>
+            </div>
+
+            <!-- Evidence -->
+            <div class="box box-evidence" [class.empty]="!d.evidence_quote">
+              <div class="evidence-header">
+                <span class="label"><i class="icon quote"></i>Цитата</span>
+                <div class="ev-actions">
+                  <button class="icon-btn" [disabled]="!d.evidence_quote" (click)="copyText(d.evidence_quote, $event)"
+                    title="Копировать цитату">
+                    <i class="icon copy"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="evidence-preview" [title]="d.evidence_quote || 'Нет цитаты'">
+                {{ d.evidence_quote ? truncate(d.evidence_quote, 180) : '—' }}
+              </div>
+
+              <div class="evidence-meta">
+                <span *ngIf="d.evidence_location" class="meta-item">
+                  <i class="icon pin"></i>{{ d.evidence_location }}
+                </span>
+
+                <span *ngIf="d.source_file" class="meta-item file-link" [class.clickable]="isUrl(d.source_file)"
+                  (click)="openSourceFile(d, $event)" [title]="d.source_file">
+                  <i class="icon file"></i>
+                  <span class="file-path">{{ d.source_file }}</span>
+                  <button class="icon-btn" (click)="copyText(d.source_file, $event)" title="Копировать путь">
+                    <i class="icon copy"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card footer -->
+        <div class="card-footer">
+          <div class="meta-times">
+            <span class="created" [title]="d.created_at">Создано: {{ formatDateTime(d.created_at) }}</span>
+            <span class="dot">•</span>
+            <span class="updated" [title]="d.updated_at">Обновлено: {{ formatDateTime(d.updated_at) }}</span>
+          </div>
+          <div class="actions">
+            <button class="btn-link" (click)="onDowntimeClick(d); $event.stopPropagation()">
+              Подробнее<i class="icon chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div> <!-- card -->
+    </div> <!-- grid -->
+  </div> <!-- list -->
+</div>

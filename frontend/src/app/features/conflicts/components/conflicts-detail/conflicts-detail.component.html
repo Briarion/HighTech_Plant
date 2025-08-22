@@ -1,0 +1,326 @@
+<div class="conflict-detail-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <app-loading-spinner size="large" message="Загрузка данных конфликта..."></app-loading-spinner>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-card">
+      <i class="icon warning"></i>
+      <h3>Ошибка загрузки</h3>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="onBack()">Вернуться к списку</button>
+    </div>
+  </div>
+
+  <!-- Conflict Details -->
+  <div *ngIf="conflict && !loading && !error">
+    <!-- Header -->
+    <div class="detail-header">
+      <button class="back-btn" (click)="onBack()">
+        <i class="icon arrow-left"></i>
+        <span>Назад к конфликтам</span>
+      </button>
+
+      <div class="header-content">
+        <div class="header-main">
+          <div class="title-section">
+            <h1 class="page-title">Конфликт #{{ conflict.id }}</h1>
+            <div class="badges-section">
+              <div class="severity-badge" [class]="'severity-' + conflict.severity">
+                <i class="icon" [class]="getSeverityIcon(conflict.severity)"></i>
+                {{ getSeverityLabel(conflict.severity) }}
+              </div>
+
+              <div class="status-badge" [class]="'status-' + conflict.status">
+                <i class="icon" [class]="getStatusIcon(conflict.status)"></i>
+                {{ getStatusLabel(conflict.status) }}
+              </div>
+
+              <div class="type-badge">
+                {{ getTypeLabel(conflict.type) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="header-actions" *ngIf="conflict.status !== 'resolved'">
+            <button *ngIf="conflict.status === 'new'" class="btn btn-warning" (click)="acknowledgeConflict()">
+              <i class="icon eye"></i>
+              Принять к сведению
+            </button>
+
+            <button class="btn btn-success" (click)="showResolveForm()">
+              <i class="icon check"></i>
+              Разрешить конфликт
+            </button>
+          </div>
+        </div>
+
+        <p class="conflict-description">{{ conflict.description }}</p>
+      </div>
+    </div>
+
+    <!-- Resolution Form -->
+    <div *ngIf="showResolutionForm" class="resolution-form-overlay">
+      <div class="resolution-form">
+        <div class="form-header">
+          <h3>Разрешение конфликта</h3>
+          <button class="close-btn" (click)="hideResolveForm()">
+            <i class="icon close"></i>
+          </button>
+        </div>
+
+        <div class="form-body">
+          <div class="form-group">
+            <label for="resolution-notes">Комментарий к разрешению:</label>
+            <textarea id="resolution-notes" [(ngModel)]="resolutionNotes"
+              placeholder="Опишите как был разрешён конфликт..." rows="4">
+            </textarea>
+          </div>
+        </div>
+
+        <div class="form-footer">
+          <button class="btn btn-secondary" (click)="hideResolveForm()">Отмена</button>
+          <button class="btn btn-success" (click)="resolveConflict()" [disabled]="!resolutionNotes.trim()">
+            <i class="icon check"></i>
+            Разрешить
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="detail-content">
+      <div class="content-grid">
+        <!-- Left Column -->
+        <div class="main-column">
+          <!-- Conflict Summary -->
+          <div class="detail-card summary-card">
+            <div class="card-header">
+              <h2 class="card-title">
+                <i class="icon info"></i>
+                Сводка конфликта
+              </h2>
+            </div>
+
+            <div class="card-body">
+              <div class="summary-grid">
+                <div class="summary-item">
+                  <span class="summary-label">Дата обнаружения:</span>
+                  <span class="summary-value">{{ formatDateTime(conflict.created_at) }}</span>
+                </div>
+
+                <div class="summary-item" *ngIf="conflict.resolved_at">
+                  <span class="summary-label">Дата разрешения:</span>
+                  <span class="summary-value">{{ formatDateTime(conflict.resolved_at!) }}</span>
+                </div>
+
+                <!-- Анализ (используем алиас, чтобы убрать ?. и типовые варнинги) -->
+                <ng-container *ngIf="conflict.analysis as analysis">
+                  <div class="summary-item">
+                    <span class="summary-label">Длительность пересечения:</span>
+                    <span class="summary-value duration">
+                      <i class="icon clock"></i>
+                      {{ analysis.overlap_duration_hours | number:'1.1-1' }} ч.
+                    </span>
+                  </div>
+
+                  <div class="summary-item">
+                    <span class="summary-label">Уровень воздействия:</span>
+                    <span class="summary-value" [class]="'impact-' + analysis.impact_level">
+                      {{ getImpactLabel(analysis.impact_level) }}
+                    </span>
+                  </div>
+
+                  <div class="summary-item" *ngIf="analysis.financial_impact">
+                    <span class="summary-label">Финансовое влияние:</span>
+                    <span class="summary-value financial">
+                      {{ formatCurrency(analysis.financial_impact || 0) }}
+                    </span>
+                  </div>
+                </ng-container>
+              </div>
+
+              <div *ngIf="conflict.resolution_notes" class="resolution-notes">
+                <h4>Комментарий к разрешению:</h4>
+                <p>{{ conflict.resolution_notes }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="detail-card timeline-card">
+            <div class="card-header">
+              <h2 class="card-title">
+                <i class="icon timeline"></i>
+                Временная шкала
+              </h2>
+            </div>
+
+            <div class="card-body">
+              <div class="timeline">
+                <!-- Downtime Timeline -->
+                <div class="timeline-item downtime">
+                  <div class="timeline-marker downtime-marker">
+                    <i class="icon warning"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <h4>{{ conflict.downtime_info.kind || 'Простой' }}</h4>
+                    <p class="timeline-time">
+                      {{ formatTime(conflict.downtime_info.start_dt) }} - {{ formatTime(conflict.downtime_info.end_dt)
+                      }}
+                    </p>
+                    <p class="timeline-line">{{ conflict.downtime_info.line_name }}</p>
+                  </div>
+                </div>
+
+                <!-- Overlap Indicator -->
+                <ng-container *ngIf="conflict.analysis as analysis">
+                  <div class="timeline-overlap" *ngIf="analysis.overlap_duration_hours > 0">
+                    <i class="icon alert"></i>
+                    <span>Пересечение {{ analysis.overlap_duration_hours | number:'1.1-1' }} ч.</span>
+                  </div>
+                </ng-container>
+
+                <!-- Task Timeline -->
+                <div class="timeline-item task">
+                  <div class="timeline-marker task-marker">
+                    <i class="icon play"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <h4>{{ conflict.task_info.product_name || 'Производственная задача' }}</h4>
+                    <p class="timeline-time">
+                      {{ formatTime(conflict.task_info.start_dt) }} - {{ formatTime(conflict.task_info.end_dt) }}
+                    </p>
+                    <p class="timeline-line">{{ conflict.task_info.line_name }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="sidebar-column">
+          <!-- Downtime Details -->
+          <div class="detail-card downtime-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="icon warning"></i>
+                Детали простоя
+              </h3>
+            </div>
+
+            <div class="card-body">
+              <div class="detail-info">
+                <div class="info-item">
+                  <span class="info-label">Тип простоя:</span>
+                  <span class="info-value">{{ conflict.downtime_info.kind || 'Простой' }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Производственная линия:</span>
+                  <span class="info-value">{{ conflict.downtime_info.line_name }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Дата:</span>
+                  <span class="info-value">{{ formatDate(conflict.downtime_info.start_dt) }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Время начала:</span>
+                  <span class="info-value">{{ formatTime(conflict.downtime_info.start_dt) }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Время окончания:</span>
+                  <span class="info-value">{{ formatTime(conflict.downtime_info.end_dt) }}</span>
+                </div>
+
+                <div class="info-item" *ngIf="conflict.downtime_info.confidence != null">
+                  <span class="info-label">Уверенность:</span>
+                  <span class="info-value confidence">
+                    {{ Math.round((conflict.downtime_info.confidence || 0) * 100) }}%
+                  </span>
+                </div>
+              </div>
+
+              <div class="info-actions">
+                <a [routerLink]="['/downtimes', conflict.downtime_id]" class="link-btn">
+                  <i class="icon external"></i>
+                  Подробнее о простое
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Details -->
+          <div class="detail-card task-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="icon play"></i>
+                Детали задачи
+              </h3>
+            </div>
+
+            <div class="card-body">
+              <div class="detail-info">
+                <div class="info-item">
+                  <span class="info-label">Наименование:</span>
+                  <span class="info-value">{{ conflict.task_info.product_name || 'Производство' }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Производственная линия:</span>
+                  <span class="info-value">{{ conflict.task_info.line_name }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Дата:</span>
+                  <span class="info-value">{{ formatDate(conflict.task_info.start_dt) }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Время начала:</span>
+                  <span class="info-value">{{ formatTime(conflict.task_info.start_dt) }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Время окончания:</span>
+                  <span class="info-value">{{ formatTime(conflict.task_info.end_dt) }}</span>
+                </div>
+              </div>
+
+              <div class="info-actions">
+                <a [routerLink]="['/plan', conflict.task_id]" class="link-btn">
+                  <i class="icon external"></i>
+                  Подробнее о задаче
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="detail-card recommendations-card" *ngIf="conflict.analysis?.recommended_actions?.length">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="icon lightbulb"></i>
+                Рекомендации
+              </h3>
+            </div>
+
+            <div class="card-body">
+              <ul class="recommendations-list">
+                <li *ngFor="let action of conflict.analysis?.recommended_actions">
+                  {{ action }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div> <!-- grid -->
+    </div> <!-- detail-content -->
+  </div> <!-- conflict -->
+</div>

@@ -1,0 +1,190 @@
+<div class="scan-container">
+  <!-- Header -->
+  <div class="scan-header">
+    <button class="back-btn" (click)="onBack()">
+      <i class="icon arrow-left"></i>
+      <span>Назад к простоям</span>
+    </button>
+
+    <div class="header-content">
+      <h1 class="page-title">Сканирование протоколов</h1>
+      <p class="page-subtitle">Автоматический поиск и анализ простоев в протоколах совещаний</p>
+    </div>
+  </div>
+
+  <!-- Current Job -->
+  <div class="current-job-section">
+    <div class="section-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="icon scan"></i>
+          Текущее сканирование
+        </h2>
+      </div>
+
+      <div class="card-body">
+        <div *ngIf="!currentJob" class="no-job">
+          <div class="no-job-content">
+            <i class="icon search"></i>
+            <h3>Сканирование не запущено</h3>
+            <p>Нажмите кнопку ниже, чтобы начать автоматический поиск простоев в протоколах совещаний</p>
+            
+            <button 
+              class="btn btn-primary btn-large" 
+              (click)="startScan()"
+              [disabled]="loading">
+              <i class="icon scan"></i>
+              <span>Начать сканирование</span>
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="currentJob" class="job-progress">
+          <div class="job-status">
+            <div class="status-info">
+              <div class="status-icon" [class]="'status-' + getStatusColor(currentJob.status)">
+                <i class="icon" [class]="getStatusIcon(currentJob.status)" [class.spinning]="currentJob.status === 'running'"></i>
+              </div>
+              
+              <div class="status-details">
+                <h3 class="job-title">
+                  <span *ngIf="currentJob.status === 'pending'">Подготовка к сканированию</span>
+                  <span *ngIf="currentJob.status === 'running'">Выполняется сканирование</span>
+                  <span *ngIf="currentJob.status === 'completed'">Сканирование завершено</span>
+                  <span *ngIf="currentJob.status === 'failed'">Сканирование прервано</span>
+                </h3>
+                <p class="job-message">{{ currentJob.message }}</p>
+              </div>
+            </div>
+
+            <div class="progress-section" *ngIf="currentJob.status === 'running' || currentJob.status === 'completed'">
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  [class]="'progress-' + getStatusColor(currentJob.status)"
+                  [style.width.%]="currentJob.progress || 0">
+                </div>
+              </div>
+              <div class="progress-text">{{ Math.round(currentJob.progress || 0) }}%</div>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div *ngIf="currentJob.results && currentJob.status === 'completed'" class="scan-results">
+            <h3 class="results-title">Результаты сканирования</h3>
+            <div class="results-grid">
+              <div class="result-item">
+                <div class="result-icon documents">
+                  <i class="icon document"></i>
+                </div>
+                <div class="result-content">
+                  <div class="result-value">{{ currentJob.results.documents_processed }}</div>
+                  <div class="result-label">Обработано документов</div>
+                </div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-icon downtimes">
+                  <i class="icon warning"></i>
+                </div>
+                <div class="result-content">
+                  <div class="result-value">{{ currentJob.results.downtimes_found }}</div>
+                  <div class="result-label">Найдено простоев</div>
+                </div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-icon conflicts">
+                  <i class="icon alert"></i>
+                </div>
+                <div class="result-content">
+                  <div class="result-value">{{ currentJob.results.conflicts_created }}</div>
+                  <div class="result-label">Обнаружено конфликтов</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="results-actions">
+              <button class="btn btn-primary" (click)="onViewResults()">
+                <i class="icon arrow-right"></i>
+                Просмотреть результаты
+              </button>
+              
+              <button class="btn btn-secondary" (click)="startScan()">
+                <i class="icon refresh"></i>
+                Повторить сканирование
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job History -->
+  <div class="history-section">
+    <div class="section-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="icon clock"></i>
+          История сканирования
+        </h2>
+      </div>
+
+      <div class="card-body">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-container">
+          <app-loading-spinner message="Загрузка истории..."></app-loading-spinner>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && jobHistory.length === 0" class="empty-history">
+          <i class="icon info"></i>
+          <p>История сканирований пуста</p>
+        </div>
+
+        <!-- History List -->
+        <div *ngIf="!loading && jobHistory.length > 0" class="history-list">
+          <div *ngFor="let job of jobHistory" class="history-item">
+            <div class="job-info">
+              <div class="job-status-icon" [class]="'status-' + getStatusColor(job.status)">
+                <i class="icon" [class]="getStatusIcon(job.status)"></i>
+              </div>
+              
+              <div class="job-details">
+                <div class="job-header">
+                  <span class="job-id">{{ job.id }}</span>
+                  <span class="job-date">{{ formatDateTime(job.created_at) }}</span>
+                </div>
+                <div class="job-meta">
+                  <span class="job-status" [class]="'status-' + getStatusColor(job.status)">
+                    <span *ngIf="job.status === 'completed'">Завершено</span>
+                    <span *ngIf="job.status === 'failed'">Ошибка</span>
+                    <span *ngIf="job.status === 'running'">Выполняется</span>
+                    <span *ngIf="job.status === 'pending'">Ожидание</span>
+                  </span>
+                  <span class="job-duration" *ngIf="job.completed_at">{{ getDuration(job) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="job.results" class="job-results-summary">
+              <div class="result-summary-item">
+                <span class="result-count">{{ job.results.documents_processed }}</span>
+                <span class="result-type">док.</span>
+              </div>
+              <div class="result-summary-item">
+                <span class="result-count">{{ job.results.downtimes_found }}</span>
+                <span class="result-type">простоев</span>
+              </div>
+              <div class="result-summary-item" *ngIf="job.results.conflicts_created > 0">
+                <span class="result-count warning">{{ job.results.conflicts_created }}</span>
+                <span class="result-type">конфл.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

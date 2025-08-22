@@ -1,0 +1,67 @@
+$primary-color: #1890ff;
+$text-secondary: #8c8c8c;
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  .spinner {
+    position: relative;
+    display: inline-block;
+
+    .spinner-circle {
+      border-radius: 50%;
+      border: 2px solid rgba($primary-color, 0.2);
+      border-top: 2px solid $primary-color;
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  .loading-message {
+    color: $text-secondary;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  // Size variations
+  &.size-small {
+    .spinner .spinner-circle {
+      width: 20px;
+      height: 20px;
+    }
+
+    .loading-message {
+      font-size: 12px;
+    }
+  }
+
+  &.size-medium {
+    .spinner .spinner-circle {
+      width: 32px;
+      height: 32px;
+    }
+
+    .loading-message {
+      font-size: 14px;
+    }
+  }
+
+  &.size-large {
+    .spinner .spinner-circle {
+      width: 48px;
+      height: 48px;
+      border-width: 3px;
+    }
+
+    .loading-message {
+      font-size: 16px;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

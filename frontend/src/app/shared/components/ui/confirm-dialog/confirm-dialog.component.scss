@@ -1,0 +1,196 @@
+$primary-color: #1890ff;
+$success-color: #52c41a;
+$warning-color: #faad14;
+$error-color: #ff4d4f;
+$text-color: #262626;
+$text-secondary: #8c8c8c;
+$border-color: #f0f0f0;
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+
+  .dialog-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    min-width: 400px;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideIn 0.2s ease;
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid $border-color;
+
+      .dialog-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .dialog-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: $text-color;
+        flex: 1;
+      }
+    }
+
+    .dialog-content {
+      padding: 16px 24px 20px;
+
+      .dialog-message {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: $text-secondary;
+      }
+    }
+
+    .dialog-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 16px 24px 20px;
+      border-top: 1px solid $border-color;
+
+      .btn {
+        padding: 8px 16px;
+        border: 1px solid $border-color;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.btn-default {
+          background: white;
+          color: $text-color;
+
+          &:hover {
+            background: #fafafa;
+            border-color: $primary-color;
+            color: $primary-color;
+          }
+        }
+
+        &.btn-primary,
+        &.btn-info {
+          background: $primary-color;
+          border-color: $primary-color;
+          color: white;
+
+          &:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+          }
+        }
+
+        &.btn-success {
+          background: $success-color;
+          border-color: $success-color;
+          color: white;
+
+          &:hover {
+            background: #73d13d;
+            border-color: #73d13d;
+          }
+        }
+
+        &.btn-warning {
+          background: $warning-color;
+          border-color: $warning-color;
+          color: white;
+
+          &:hover {
+            background: #ffc53d;
+            border-color: #ffc53d;
+          }
+        }
+
+        &.btn-error {
+          background: $error-color;
+          border-color: $error-color;
+          color: white;
+
+          &:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Icons
+.icon {
+  &.info-circle::before { content: 'ℹ'; }
+  &.exclamation-triangle::before { content: '⚠'; }
+  &.exclamation-circle::before { content: '!'; }
+  &.check-circle::before { content: '✓'; }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .dialog-overlay {
+    padding: 16px;
+
+    .dialog-container {
+      min-width: auto;
+      width: 100%;
+      max-width: none;
+
+      .dialog-header,
+      .dialog-content,
+      .dialog-actions {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .dialog-actions {
+        flex-direction: column-reverse;
+
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

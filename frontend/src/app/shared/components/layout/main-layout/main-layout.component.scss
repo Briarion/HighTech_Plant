@@ -1,0 +1,102 @@
+$header-height: 64px;
+$sidebar-width: 280px;
+$sidebar-collapsed-width: 64px;
+$transition-duration: 0.3s;
+
+.app-layout {
+  display: grid;
+  grid-template-areas: 
+    "sidebar header"
+    "sidebar main";
+  grid-template-columns: $sidebar-width 1fr;
+  grid-template-rows: $header-height 1fr;
+  height: 100vh;
+  transition: grid-template-columns $transition-duration ease;
+
+  &.sidebar-collapsed {
+    grid-template-columns: $sidebar-collapsed-width 1fr;
+  }
+}
+
+.app-header {
+  grid-area: header;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.app-sidebar {
+  grid-area: sidebar;
+  z-index: 110;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+}
+
+.app-main {
+  grid-area: main;
+  position: relative;
+  overflow: auto;
+  background-color: #f5f7fa;
+
+  &.loading {
+    pointer-events: none;
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.content-wrapper {
+  padding: 24px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+// Responsive breakpoints
+@media (max-width: 1024px) {
+  .app-layout {
+    grid-template-areas: 
+      "header"
+      "main";
+    grid-template-columns: 1fr;
+    grid-template-rows: $header-height 1fr;
+  }
+
+  .app-sidebar {
+    position: fixed;
+    top: $header-height;
+    left: 0;
+    height: calc(100vh - #{$header-height});
+    transform: translateX(-100%);
+    transition: transform $transition-duration ease;
+    z-index: 200;
+
+    .sidebar-collapsed & {
+      transform: translateX(-100%);
+    }
+
+    // Show sidebar on mobile when not collapsed
+    .app-layout:not(.sidebar-collapsed) & {
+      transform: translateX(0);
+    }
+  }
+
+  .content-wrapper {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 12px;
+  }
+}

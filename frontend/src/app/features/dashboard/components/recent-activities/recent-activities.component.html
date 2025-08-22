@@ -1,0 +1,21 @@
+<div class="activities-container">
+  <div *ngIf="activities.length === 0" class="empty-state">
+    <i class="icon clock"></i>
+    <p>Нет недавней активности</p>
+  </div>
+
+  <div *ngFor="let activity of activities.slice(0, 8)" class="activity-item">
+    <div class="activity-icon" [class]="'icon-' + activity.color">
+      <i class="icon" [class]="activity.icon"></i>
+    </div>
+    
+    <div class="activity-content">
+      <div class="activity-header">
+        <h4 class="activity-title">{{ activity.title }}</h4>
+        <span class="activity-time">{{ formatTime(activity.timestamp) }}</span>
+      </div>
+      <p class="activity-description">{{ activity.description }}</p>
+      <span class="activity-status" [class]="'status-' + activity.status">{{ activity.status }}</span>
+    </div>
+  </div>
+</div>

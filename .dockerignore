@@ -1,0 +1,8 @@
+.git
+**/__pycache__/
+**/*.pyc
+**/.DS_Store
+backend/media
+backend/logs
+frontend/node_modules
+models/

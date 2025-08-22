@@ -1,0 +1,195 @@
+<div class="downtime-detail-container">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <app-loading-spinner size="large" message="Загрузка данных простоя..."></app-loading-spinner>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-card">
+      <i class="icon warning"></i>
+      <h3>Ошибка загрузки</h3>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="onBack()">Вернуться к списку</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="downtime && !loading && !error">
+    <!-- Header -->
+    <div class="detail-header">
+      <button class="back-btn" (click)="onBack()">
+        <i class="icon arrow-left"></i>
+        <span>Назад к списку</span>
+      </button>
+
+      <div class="header-content">
+        <div class="title-section">
+          <div class="title-left">
+            <h1 class="page-title">{{ downtime.kind || 'Простой' }}</h1>
+            <p class="page-subtitle">
+              <i class="icon line"></i>{{ downtime.line_name }}
+            </p>
+          </div>
+
+          <div class="title-right">
+            <span class="chip chip-status" [ngClass]="getStatusClass(downtime.status)">
+              <i class="icon flag"></i>{{ downtime.status || '—' }}
+            </span>
+            <span class="chip chip-source" [ngClass]="getSourceClass(downtime.source)">
+              <i class="icon source"></i>{{ getSourceLabel(downtime.source) }}
+            </span>
+            <span class="confidence-badge" [class]="'confidence-' + getConfidenceLevel()">
+              {{ Math.round((downtime.confidence || 0) * 100) }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="detail-card summary-card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="icon info"></i>Общая информация</h2>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item" [title]="downtime.partial_date_start ? 'Год восстановлен эвристически' : ''">
+            <span class="info-label">Начало:</span>
+            <span class="info-value">
+              <span class="partial-flag" *ngIf="downtime.partial_date_start">~</span>
+              {{ formatDate(downtime.start_dt) }}
+            </span>
+          </div>
+
+          <div class="info-item" [title]="downtime.partial_date_end ? 'Год восстановлен эвристически' : ''">
+            <span class="info-label">Окончание:</span>
+            <span class="info-value">
+              <span class="partial-flag" *ngIf="downtime.partial_date_end">~</span>
+              {{ formatDate(downtime.end_dt) }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Длительность:</span>
+            <span class="info-value duration">
+              <i class="icon clock"></i>
+              {{ downtime.duration_days }} {{ downtime.duration_days % 10 === 1 && downtime.duration_days % 100 !== 11 ?
+              'день' :
+              (downtime.duration_days % 10 >= 2 && downtime.duration_days % 10 <= 4 && (downtime.duration_days % 100 <
+                10 || downtime.duration_days % 100>= 20) ? 'дня' : 'дней') }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Статус:</span>
+            <span class="info-value">{{ downtime.status || '—' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Источник:</span>
+            <span class="info-value">{{ getSourceLabel(downtime.source) }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Создано:</span>
+            <span class="info-value">{{ formatDateTime(downtime.created_at) }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Обновлено:</span>
+            <span class="info-value">{{ formatDateTime(downtime.updated_at) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence -->
+    <div class="detail-card evidence-card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="icon quote"></i>Доказательства</h2>
+      </div>
+      <div class="card-body">
+        <div class="evidence-grid">
+          <div class="evidence-block">
+            <div class="block-header">
+              <span class="block-label">Цитата из документа</span>
+              <div class="block-actions">
+                <button class="icon-btn" [disabled]="!downtime.evidence_quote"
+                  (click)="copyText(downtime.evidence_quote, $event)" title="Копировать цитату">
+                  <i class="icon copy"></i>
+                </button>
+                <button class="icon-btn" [disabled]="!downtime.evidence_quote" (click)="showFullQuote = !showFullQuote"
+                  title="{{ showFullQuote ? 'Свернуть' : 'Показать полностью' }}">
+                  <i class="icon expand"></i>
+                </button>
+              </div>
+            </div>
+            <div class="quote-content" [class.clamped]="!showFullQuote"
+              [title]="!showFullQuote ? downtime.evidence_quote || '—' : ''">
+              {{ downtime.evidence_quote || '—' }}
+            </div>
+          </div>
+
+          <div class="evidence-meta">
+            <div class="meta-row" *ngIf="downtime.evidence_location">
+              <span class="meta-label"><i class="icon pin"></i>Местоположение:</span>
+              <span class="meta-value">{{ downtime.evidence_location }}</span>
+            </div>
+
+            <div class="meta-row" *ngIf="downtime.source_file">
+              <span class="meta-label"><i class="icon file"></i>Файл-источник:</span>
+              <span class="meta-value file-link" [class.clickable]="isUrl(downtime.source_file)"
+                (click)="openSourceFile(downtime.source_file, $event)" [title]="downtime.source_file">
+                <span class="truncate">{{ downtime.source_file }}</span>
+                <button class="icon-btn" (click)="copyText(downtime.source_file, $event)" title="Копировать путь">
+                  <i class="icon copy"></i>
+                </button>
+              </span>
+            </div>
+
+            <div class="meta-row" *ngIf="downtime.notes">
+              <span class="meta-label"><i class="icon note"></i>Заметки:</span>
+              <span class="meta-value">{{ downtime.notes }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata / Extraction -->
+    <div class="detail-card meta-card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="icon gear"></i>Метаданные извлечения</h2>
+      </div>
+      <div class="card-body">
+        <div class="meta-grid">
+          <div class="meta-item">
+            <span class="meta-label">Версия извлечения:</span>
+            <span class="meta-value">{{ downtime.extraction_version || '—' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Хеш источника:</span>
+            <span class="meta-value mono">{{ maskHash(downtime.source_hash) }}</span>
+            <button class="icon-btn" [disabled]="!downtime.source_hash" (click)="copyText(downtime.source_hash, $event)"
+              title="Копировать хеш">
+              <i class="icon copy"></i>
+            </button>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Источников в слиянии:</span>
+            <span class="meta-value">{{ downtime.sources_json?.length ?? 0 }}</span>
+            <button class="icon-btn" [disabled]="!downtime.sources_json?.length" (click)="showSources = !showSources"
+              title="{{ showSources ? 'Свернуть' : 'Показать' }}">
+              <i class="icon expand"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="sources-raw" *ngIf="showSources">
+          <pre>{{ downtime.sources_json | json }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,379 @@
+$header-height: 64px;
+$primary-color: #1890ff;
+$text-color: #262626;
+$text-secondary: #8c8c8c;
+$border-color: #f0f0f0;
+$success-color: #52c41a;
+$error-color: #ff4d4f;
+$warning-color: #faad14;
+
+.header {
+  height: $header-height;
+  background: white;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: relative;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .menu-toggle {
+      padding: 8px;
+      
+      .icon {
+        font-size: 18px;
+        color: $text-color;
+      }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .logo {
+        height: 32px;
+        width: auto;
+      }
+
+      .title {
+        font-size: 20px;
+        font-weight: 600;
+        color: $text-color;
+        margin: 0;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+
+    .health-status {
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: rgba($success-color, 0.1);
+        border-radius: 16px;
+
+        .status-online {
+          color: $success-color;
+          font-size: 14px;
+        }
+
+        .status-text {
+          font-size: 12px;
+          color: $success-color;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .notifications-container {
+      position: relative;
+
+      .notifications-toggle {
+        position: relative;
+        padding: 8px;
+
+        .icon {
+          font-size: 18px;
+          color: $text-secondary;
+        }
+
+        &.has-notifications {
+          .icon {
+            color: $primary-color;
+          }
+        }
+
+        .notification-badge {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          background: $error-color;
+          color: white;
+          font-size: 10px;
+          font-weight: 600;
+          padding: 1px 5px;
+          border-radius: 8px;
+          min-width: 16px;
+          text-align: center;
+        }
+      }
+
+      .notifications-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 380px;
+        max-height: 480px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        border: 1px solid $border-color;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: all 0.2s ease;
+        z-index: 1000;
+
+        &.show {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+
+        .dropdown-header {
+          padding: 16px 20px;
+          border-bottom: 1px solid $border-color;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: $text-color;
+          }
+
+          .header-actions {
+            display: flex;
+            gap: 8px;
+
+            .btn {
+              padding: 4px;
+              
+              .icon {
+                font-size: 14px;
+              }
+            }
+          }
+        }
+
+        .notifications-list {
+          max-height: 360px;
+          overflow-y: auto;
+
+          .notification-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #fafafa;
+            transition: background-color 0.2s ease;
+
+            &:hover {
+              background: #fafafa;
+            }
+
+            &.unread {
+              background: rgba($primary-color, 0.02);
+              border-left: 3px solid $primary-color;
+            }
+
+            .notification-content {
+              .notification-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 4px;
+
+                .notification-icon {
+                  font-size: 14px;
+                  flex-shrink: 0;
+                }
+
+                .notification-title {
+                  font-size: 13px;
+                  font-weight: 500;
+                  color: $text-color;
+                  flex: 1;
+                }
+
+                .notification-time {
+                  font-size: 11px;
+                  color: $text-secondary;
+                  flex-shrink: 0;
+                }
+
+                .btn {
+                  padding: 2px;
+                  opacity: 0;
+                  transition: opacity 0.2s ease;
+
+                  .icon {
+                    font-size: 12px;
+                  }
+                }
+              }
+
+              &:hover {
+                .btn {
+                  opacity: 1;
+                }
+              }
+
+              .notification-message {
+                font-size: 12px;
+                color: $text-secondary;
+                margin: 0;
+                line-height: 1.4;
+                margin-left: 22px;
+              }
+            }
+          }
+
+          .empty-notifications {
+            padding: 40px 20px;
+            text-align: center;
+            color: $text-secondary;
+
+            .icon {
+              font-size: 24px;
+              margin-bottom: 8px;
+              display: block;
+            }
+
+            p {
+              margin: 0;
+              font-size: 14px;
+            }
+          }
+
+          .more-notifications {
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid $border-color;
+            background: #fafafa;
+
+            span {
+              font-size: 12px;
+              color: $text-secondary;
+            }
+          }
+        }
+      }
+    }
+
+    .user-menu {
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        background: #fafafa;
+
+        .user-avatar {
+          width: 28px;
+          height: 28px;
+          background: $primary-color;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          .icon {
+            color: white;
+            font-size: 14px;
+          }
+        }
+
+        .user-name {
+          font-size: 13px;
+          font-weight: 500;
+          color: $text-color;
+        }
+      }
+    }
+  }
+
+  .notifications-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+  }
+}
+
+// Button styles
+.btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &.btn-ghost {
+    &:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  &.btn-link {
+    color: $text-secondary;
+
+    &:hover {
+      color: $primary-color;
+    }
+  }
+
+  &.btn-sm {
+    padding: 6px 8px;
+  }
+
+  &.btn-xs {
+    padding: 2px 4px;
+  }
+}
+
+// Icon placeholders for actual icon font
+.icon {
+  display: inline-block;
+  font-style: normal;
+  
+  &.menu::before { content: '☰'; }
+  &.menu-fold::before { content: '◧'; }
+  &.bell::before { content: '🔔'; }
+  &.bell-slash::before { content: '🔕'; }
+  &.check-circle::before { content: '✓'; }
+  &.exclamation-circle::before { content: '!'; }
+  &.exclamation-triangle::before { content: '⚠'; }
+  &.info-circle::before { content: 'ℹ'; }
+  &.eye::before { content: '👁'; }
+  &.trash::before { content: '🗑'; }
+  &.close::before { content: '×'; }
+  &.user::before { content: '👤'; }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+
+    .header-right {
+      gap: 16px;
+
+      .health-status {
+        display: none;
+      }
+
+      .user-menu .user-info .user-name {
+        display: none;
+      }
+
+      .notifications-dropdown {
+        width: 320px;
+      }
+    }
+  }
+}

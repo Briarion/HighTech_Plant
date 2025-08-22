@@ -1,0 +1,27 @@
+<div class="app-layout" [class.sidebar-collapsed]="sidebarCollapsed">
+  <!-- Header -->
+  <app-header 
+    class="app-header"
+    [sidebarCollapsed]="sidebarCollapsed"
+    (toggleSidebar)="toggleSidebar()">
+  </app-header>
+
+  <!-- Sidebar -->
+  <app-sidebar 
+    class="app-sidebar"
+    [collapsed]="sidebarCollapsed">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="app-main" [class.loading]="isLoading">
+    <!-- Loading Overlay -->
+    <div *ngIf="isLoading" class="loading-overlay">
+      <app-loading-spinner></app-loading-spinner>
+    </div>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

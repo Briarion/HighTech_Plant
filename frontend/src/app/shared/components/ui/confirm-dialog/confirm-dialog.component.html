@@ -1,0 +1,32 @@
+<div *ngIf="show" class="dialog-overlay" (click)="onBackdropClick()">
+  <div class="dialog-container" (click)="$event.stopPropagation()">
+    <!-- Dialog Header -->
+    <div class="dialog-header">
+      <div class="dialog-icon" [style.color]="getTypeColor()">
+        <i class="icon" [class]="getTypeIcon()"></i>
+      </div>
+      <h3 class="dialog-title">{{ data.title }}</h3>
+    </div>
+
+    <!-- Dialog Content -->
+    <div class="dialog-content">
+      <p class="dialog-message">{{ data.message }}</p>
+    </div>
+
+    <!-- Dialog Actions -->
+    <div class="dialog-actions">
+      <button 
+        class="btn btn-default"
+        (click)="onCancel()">
+        {{ data.cancelText || 'Отмена' }}
+      </button>
+      
+      <button 
+        class="btn"
+        [class]="'btn-' + (data.type || 'primary')"
+        (click)="onConfirm()">
+        {{ data.confirmText || 'Подтвердить' }}
+      </button>
+    </div>
+  </div>
+</div>

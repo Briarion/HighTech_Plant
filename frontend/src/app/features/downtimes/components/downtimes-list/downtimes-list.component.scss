@@ -1,0 +1,385 @@
+$primary-color: #1890ff;
+$success-color: #52c41a;
+$warning-color: #faad14;
+$danger-color: #ff4d4f;
+$text-color: #262626;
+$text-secondary: #8c8c8c;
+$border-color: #f0f0f0;
+
+.downtimes-container {
+  padding: 0;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px 32px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .header-content {
+      .page-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: $text-color;
+        margin: 0 0 4px 0;
+      }
+
+      .page-subtitle {
+        font-size: 16px;
+        color: $text-secondary;
+        margin: 0;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+
+      .btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+
+        &.btn-primary {
+          border: 1px solid $primary-color;
+          background: $primary-color;
+          color: white;
+
+          &:hover:not(:disabled) {
+            background: #40a9ff;
+            border-color: #40a9ff;
+          }
+        }
+
+        &.btn-secondary {
+          border: 1px solid $border-color;
+          background: white;
+          color: $text-color;
+
+          &:hover:not(:disabled) {
+            border-color: $primary-color;
+            color: $primary-color;
+          }
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .icon {
+          font-size: 14px;
+
+          &.spinning {
+            animation: spin 1s linear infinite;
+          }
+        }
+      }
+    }
+  }
+
+  .loading-container,
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+  }
+
+  .error-card {
+    text-align: center;
+    padding: 48px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .icon {
+      font-size: 48px;
+      color: $warning-color;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: $text-color;
+      margin: 0 0 8px 0;
+    }
+
+    p {
+      color: $text-secondary;
+      margin: 0 0 24px 0;
+    }
+  }
+
+  .downtimes-list {
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      text-align: center;
+      padding: 48px;
+
+      .icon {
+        font-size: 64px;
+        color: $text-secondary;
+        margin-bottom: 24px;
+      }
+
+      h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: $text-color;
+        margin: 0 0 8px 0;
+      }
+
+      p {
+        color: $text-secondary;
+        margin: 0 0 32px 0;
+        font-size: 16px;
+      }
+
+      .btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border: 1px solid $primary-color;
+        background: $primary-color;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+
+        &:hover {
+          background: #40a9ff;
+          border-color: #40a9ff;
+        }
+
+        .icon {
+          font-size: 16px;
+        }
+      }
+    }
+
+    .downtimes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 24px;
+    }
+  }
+
+  .downtime-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    overflow: hidden;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid $border-color;
+
+      .downtime-info {
+        flex: 1;
+
+        .downtime-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: $text-color;
+          margin: 0 0 4px 0;
+          line-height: 1.3;
+        }
+
+        .downtime-line {
+          font-size: 14px;
+          color: $text-secondary;
+          margin: 0;
+        }
+      }
+
+      .confidence-badge {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        flex-shrink: 0;
+
+        &.confidence-high {
+          background: rgba($success-color, 0.1);
+          color: $success-color;
+        }
+
+        &.confidence-medium {
+          background: rgba($warning-color, 0.1);
+          color: $warning-color;
+        }
+
+        &.confidence-low {
+          background: rgba($danger-color, 0.1);
+          color: $danger-color;
+        }
+
+        &.confidence-unknown {
+          background: rgba($text-secondary, 0.1);
+          color: $text-secondary;
+        }
+
+        .icon {
+          font-size: 10px;
+        }
+      }
+    }
+
+    .card-body {
+      padding: 16px 24px;
+
+      .time-info {
+        margin-bottom: 16px;
+
+        .time-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .time-label {
+            font-size: 14px;
+            color: $text-secondary;
+            font-weight: 500;
+          }
+
+          .time-value {
+            font-size: 14px;
+            color: $text-color;
+            font-weight: 500;
+          }
+        }
+      }
+
+      .duration-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba($primary-color, 0.05);
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: $primary-color;
+
+        .icon {
+          font-size: 14px;
+        }
+      }
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background: rgba($border-color, 0.3);
+
+      .created-date {
+        font-size: 12px;
+        color: $text-secondary;
+      }
+
+      .icon.chevron-right {
+        font-size: 14px;
+        color: $text-secondary;
+      }
+    }
+  }
+}
+
+// Icons
+.icon {
+  &.refresh::before { content: '🔄'; }
+  &.scan::before { content: '🔍'; }
+  &.warning::before { content: '⚠'; }
+  &.info::before { content: 'ℹ'; }
+  &.check::before { content: '✓'; }
+  &.alert::before { content: '🚨'; }
+  &.clock::before { content: '🕐'; }
+  &.chevron-right::before { content: '›'; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .downtimes-container {
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+
+      .header-actions {
+        align-self: stretch;
+
+        .btn {
+          flex: 1;
+          justify-content: center;
+        }
+      }
+    }
+
+    .downtimes-list .downtimes-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .downtime-card {
+      .card-header {
+        padding: 16px 20px 12px;
+
+        .downtime-title {
+          font-size: 16px;
+        }
+      }
+
+      .card-body {
+        padding: 12px 20px;
+      }
+
+      .card-footer {
+        padding: 10px 20px;
+      }
+    }
+  }
+}

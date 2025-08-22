@@ -1,0 +1,14 @@
+<div class="system-status-card" [class]="'status-' + status">
+  <div class="status-icon">
+    <i class="icon" [class]="statusIcon"></i>
+  </div>
+  
+  <div class="status-content">
+    <h3 class="status-title">{{ title }}</h3>
+    <div class="status-text">{{ statusText }}</div>
+    <div class="status-indicator">
+      <div class="indicator-dot" [class]="'dot-' + status"></div>
+      <span class="indicator-label">{{ status === 'healthy' ? 'Онлайн' : status === 'warning' ? 'Предупреждение' : 'Офлайн' }}</span>
+    </div>
+  </div>
+</div>

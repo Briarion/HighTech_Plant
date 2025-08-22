@@ -1,0 +1,671 @@
+openapi: 3.1.0
+info:
+  title: Scheduler with Protocol Parser API
+  description: |
+    API для системы планирования с парсером протоколов.
+    Система импортирует планы производства из Excel, сканирует папки с протоколами (.docx)
+    и извлекает интервалы простоев с использованием локального LLM.
+  version: 1.0.0
+  contact:
+    name: Scheduler Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8001/api
+    description: Development server
+
+paths:
+  /plan/upload:
+    post:
+      summary: Загрузка плана производства из Excel
+      description: Импорт плана производства из Excel файла (синхронный, до 20с)
+      operationId: uploadPlan
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Excel файл с планом производства
+              required:
+                - file
+      responses:
+        '200':
+          description: План успешно загружен и обработан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      tasks_created:
+                        type: integer
+                        description: Количество созданных задач
+                        example: 3
+                      line_id:
+                        type: integer
+                        description: ID производственной линии
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PlanTask'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+
+  /minutes/upload:
+    post:
+      summary: Загрузка протоколов совещаний
+      description: Загрузка одного или нескольких файлов протоколов
+      operationId: uploadMinutes
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: DOCX файлы с протоколами
+              required:
+                - files
+      responses:
+        '200':
+          description: Файлы успешно загружены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /minutes/scan:
+    post:
+      summary: Асинхронное сканирование папки с протоколами
+      description: Запуск асинхронного сканирования папки /app/data/minutes
+      operationId: scanMinutes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                folder_path:
+                  type: string
+                  default: "/app/data/minutes"
+                  description: Путь к папке для сканирования
+      responses:
+        '202':
+          description: Задача сканирования запущена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      job_id:
+                        type: string
+                        format: uuid
+                        description: ID задачи для отслеживания статуса
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      status:
+                        type: string
+                        enum: [pending]
+                        example: "pending"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /minutes/scan/{job_id}:
+    get:
+      summary: Получение статуса задачи сканирования
+      description: Проверка статуса асинхронной задачи сканирования
+      operationId: getScanJobStatus
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: ID задачи
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Статус задачи
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      job_id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum: [pending, processing, completed, failed]
+                      progress:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Прогресс выполнения в процентах
+                      result:
+                        type: object
+                        nullable: true
+                        properties:
+                          downtimes_extracted:
+                            type: integer
+                            description: Количество извлечённых простоев
+                          conflicts_detected:
+                            type: integer
+                            description: Количество обнаруженных конфликтов
+                          files_processed:
+                            type: integer
+                            description: Количество обработанных файлов
+                      error_message:
+                        type: string
+                        nullable: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /conflicts:
+    get:
+      summary: Получение списка конфликтов
+      description: Получение всех обнаруженных конфликтов между задачами и простоями
+      operationId: getConflicts
+      parameters:
+        - name: line_id
+          in: query
+          description: Фильтр по ID линии
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Фильтр по статусу конфликта
+          schema:
+            type: string
+            enum: [active, resolved, ignored]
+      responses:
+        '200':
+          description: Список конфликтов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conflict'
+
+  /downtimes:
+    get:
+      summary: Получение списка простоев
+      description: Получение всех извлечённых простоев
+      operationId: getDowntimes
+      parameters:
+        - name: line_id
+          in: query
+          description: Фильтр по ID линии
+          schema:
+            type: integer
+        - name: start_date
+          in: query
+          description: Начальная дата (DD-MM-YYYY)
+          schema:
+            type: string
+            pattern: '^\d{2}-\d{2}-\d{4}$'
+        - name: end_date
+          in: query
+          description: Конечная дата (DD-MM-YYYY)
+          schema:
+            type: string
+            pattern: '^\d{2}-\d{2}-\d{4}$'
+      responses:
+        '200':
+          description: Список простоев
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Downtime'
+
+  /plan:
+    get:
+      summary: Получение плана производства
+      description: Получение всех задач плана производства
+      operationId: getPlan
+      parameters:
+        - name: line_id
+          in: query
+          description: Фильтр по ID линии
+          schema:
+            type: integer
+        - name: start_date
+          in: query
+          description: Начальная дата (DD-MM-YYYY)
+          schema:
+            type: string
+            pattern: '^\d{2}-\d{2}-\d{4}$'
+        - name: end_date
+          in: query
+          description: Конечная дата (DD-MM-YYYY)
+          schema:
+            type: string
+            pattern: '^\d{2}-\d{2}-\d{4}$'
+      responses:
+        '200':
+          description: План производства
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PlanTask'
+
+  /lines:
+    get:
+      summary: Получение списка производственных линий
+      description: Получение всех производственных линий с псевдонимами
+      operationId: getLines
+      responses:
+        '200':
+          description: Список производственных линий
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductionLine'
+
+  /export/conflicts.csv:
+    get:
+      summary: Экспорт конфликтов в CSV
+      description: Экспорт всех конфликтов в CSV формате
+      operationId: exportConflictsCsv
+      responses:
+        '200':
+          description: CSV файл с конфликтами
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  /export/conflicts.json:
+    get:
+      summary: Экспорт конфликтов в JSON
+      description: Экспорт всех конфликтов в JSON формате
+      operationId: exportConflictsJson
+      responses:
+        '200':
+          description: JSON файл с конфликтами
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conflicts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conflict'
+                  exported_at:
+                    type: string
+                    format: date-time
+
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        error:
+          type: object
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        data:
+          type: object
+          nullable: true
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Код ошибки
+            message:
+              type: string
+              description: Сообщение об ошибке на русском языке
+            details:
+              type: object
+              description: Дополнительные детали ошибки
+          required:
+            - code
+            - message
+
+    ProductionLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID линии
+        name:
+          type: string
+          description: Название линии
+          example: "Линия_66"
+        aliases:
+          type: array
+          items:
+            type: string
+          description: Псевдонимы линии
+          example: ["производственная линия", "66-я линия", "фриз драй"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+
+    PlanTask:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID задачи
+        line:
+          $ref: '#/components/schemas/ProductionLine'
+        product:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+          description: Продукт
+        title:
+          type: string
+          description: Название задачи
+        start_dt:
+          type: string
+          format: date
+          description: Дата начала (DD-MM-YYYY)
+          pattern: '^\d{2}-\d{2}-\d{4}$'
+        end_dt:
+          type: string
+          format: date
+          description: Дата окончания (DD-MM-YYYY)
+          pattern: '^\d{2}-\d{2}-\d{4}$'
+        source:
+          type: string
+          enum: [excel]
+          default: excel
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - start_dt
+        - end_dt
+
+    Downtime:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID простоя
+        line:
+          allOf:
+            - $ref: '#/components/schemas/ProductionLine'
+          nullable: true
+          description: Линия (может быть null для неопределённых линий)
+        start_dt:
+          type: string
+          format: date
+          description: Дата начала (DD-MM-YYYY)
+          pattern: '^\d{2}-\d{2}-\d{4}$'
+        end_dt:
+          type: string
+          format: date
+          description: Дата окончания (DD-MM-YYYY)
+          pattern: '^\d{2}-\d{2}-\d{4}$'
+        status:
+          type: string
+          enum: [утверждено, план, предложение, обсуждение, выполнено]
+          description: Статус простоя
+        kind:
+          type: string
+          enum: [обслуживание, ремонт, модернизация, прочее]
+          description: Вид работ
+        source_file:
+          type: string
+          description: Исходный файл
+        evidence_quote:
+          type: string
+          nullable: true
+          description: Цитата из документа
+        evidence_location:
+          type: string
+          nullable: true
+          description: Местоположение в документе
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Уверенность извлечения (0-1)
+        partial_date_start:
+          type: boolean
+          description: Частичная дата начала (год восстановлен)
+        partial_date_end:
+          type: boolean
+          description: Частичная дата окончания (год восстановлен)
+        notes:
+          type: string
+          nullable: true
+          description: Заметки об извлечении
+        extraction_version:
+          type: string
+          default: "v1"
+        source_hash:
+          type: string
+          description: SHA256 хеш исходного текста
+        source:
+          type: string
+          enum: [llm, fallback, manual]
+          description: Источник извлечения
+        sources_json:
+          type: array
+          items:
+            type: object
+            properties:
+              source_file:
+                type: string
+              evidence_quote:
+                type: string
+              evidence_location:
+                type: string
+              source_hash:
+                type: string
+          description: Список источников при слиянии
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - start_dt
+        - end_dt
+        - confidence
+        - source
+
+    Conflict:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID конфликта
+        level:
+          type: string
+          enum: [warning]
+          description: Уровень важности
+        code:
+          type: string
+          enum: [CONFLICT_DETECTED]
+          description: Код конфликта
+        text:
+          type: string
+          description: Описание конфликта на русском
+        plan_task:
+          $ref: '#/components/schemas/PlanTask'
+        downtime:
+          $ref: '#/components/schemas/Downtime'
+        overlap_start:
+          type: string
+          format: date
+          description: Начало пересечения (DD-MM-YYYY)
+        overlap_end:
+          type: string
+          format: date
+          description: Конец пересечения (DD-MM-YYYY)
+        priority_status:
+          type: string
+          description: Статус с приоритетом (утверждено > выполнено > план > предложение > обсуждение)
+        unique_key:
+          type: string
+          description: SHA256 ключ для дедупликации
+        payload_json:
+          type: object
+          description: Дополнительные данные о конфликте
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - level
+        - code
+        - text
+
+  responses:
+    ValidationError:
+      description: Ошибка валидации данных
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+            example:
+              success: false
+              data: null
+              error:
+                code: "VALIDATION_ERROR"
+                message: "Неверные данные запроса"
+                details:
+                  field_name: ["Это поле обязательно"]
+
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+            example:
+              success: false
+              data: null
+              error:
+                code: "NOT_FOUND"
+                message: "Ресурс не найден"
+                details: {}
+
+    UnsupportedMediaType:
+      description: Неподдерживаемый тип файла
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+            example:
+              success: false
+              data: null
+              error:
+                code: "UNSUPPORTED_MEDIA_TYPE"
+                message: "Неподдерживаемый тип файла"
+                details:
+                  supported_types: [".xlsx", ".docx"]
+
+    PayloadTooLarge:
+      description: Файл превышает максимальный размер
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+            example:
+              success: false
+              data: null
+              error:
+                code: "PAYLOAD_TOO_LARGE"
+                message: "Файл превышает лимит 20 МБ"
+                details:
+                  max_size_mb: 20
+                  file_size_mb: 25

@@ -1,5 +1,12 @@
 /.claude
+/.vscode
 /docs
 /logs
 /models
+/node_modules
+frontend/node_modules
+frontend/.angular
+frontend/dist
+backend/logs
 CLAUDE.md
+**/.DS_Store

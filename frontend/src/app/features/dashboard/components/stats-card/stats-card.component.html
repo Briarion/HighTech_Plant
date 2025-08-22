@@ -1,0 +1,18 @@
+<div class="stats-card" [class]="'card-' + color">
+  <div class="card-icon">
+    <i class="icon" [class]="icon"></i>
+  </div>
+  
+  <div class="card-content">
+    <div class="card-header">
+      <h3 class="card-title">{{ title }}</h3>
+      <div *ngIf="trend" class="trend" [class]="'trend-' + trend.direction">
+        <i class="icon" [class]="trend.direction === 'up' ? 'trend-up' : 'trend-down'"></i>
+        <span>{{ trend.value }}%</span>
+      </div>
+    </div>
+    
+    <div class="card-value">{{ value | number }}</div>
+    <div class="card-subtitle">{{ subtitle }}</div>
+  </div>
+</div>
