@@ -26,15 +26,15 @@
 
 ## Архитектура
 
-┌───────────────┐  ┌────────────────┐  ┌───────────────┐  ┌───────────────┐
-│  Frontend     │  │    Backend     │  │   Database    │  │     LLM       │
-│  (Angular)    │  │   (Django)     │  │ (PostgreSQL)  │  │  (Qwen2.5)    │
-│               │  │                │  │               │  │               │
-│ Timeline UI   │◄─┤ REST API       │◄─┤ Models        │  │ Text parsing  │
-│ Upload forms  │  │ LangChain      │  │ Plans         │  │ Structured    │
-│ Notifications │  │ File parsing   │  │ Conflict data │  │ extraction    │
-│ Russian i18n  │  │ Background jobs│  │ Audit logs    │  │               │
-└───────────────┘  └────────────────┘  └───────────────┘  └───────────────┘
+┌─────────────┐  ┌───────────────┐  ┌─────────────┐  ┌─────────────┐
+│  Frontend   │  │    Backend    │  │ Database    │  │   LLM       │
+│  (Angular)  │  │   (Django)    │  │(PostgreSQL) │  │ (Qwen2.5)   │
+│             │  │               │  │             │  │             │
+│Timeline UI  │◄─┤REST API       │◄─┤Models       │  │Text parsing │
+│Upload forms │  │LangChain      │  │Plans        │  │Structured   │
+│Notifications│  │File parsing   │  │Conflict data│  │extraction   │
+│Russian i18n │  │Background jobs│  │Audit logs   │  │             │
+└─────────────┘  └───────────────┘  └─────────────┘  └─────────────┘
                    
 
 ## Требования
