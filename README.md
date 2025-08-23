@@ -64,12 +64,8 @@ mkdir -p models
 
 ```bash
 huggingface-cli download Qwen/Qwen2.5-7B-Instruct-GGUF \
-  qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf \
-  --local-dir models --local-dir-use-symlinks False
-
-huggingface-cli download Qwen/Qwen2.5-7B-Instruct-GGUF \
-  qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf \
-  --local-dir models --local-dir-use-symlinks False
+  --include "qwen2.5-7b-instruct-q4_k_m-*.gguf" \
+  --local-dir ./models --local-dir-use-symlinks False
 ```
 
 - Проверить, что оба файла на месте
